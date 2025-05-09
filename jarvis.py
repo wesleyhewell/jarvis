@@ -16,16 +16,6 @@ porcupine = pvporcupine.create(
     keyword_paths=['./hey_jarvis.ppn']
 )
 
-# Start an audio stream for wake word detection
-# pa = pyaudio.PyAudio()
-# audio_stream = pa.open(
-#     rate = porcupine.sample_rate,
-#     channels = 1, 
-#     format = pyaudio.paInt16,
-#     input = True, 
-#     frames_per_buffer = porcupine.frame_length
-# )
-
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
 engine.setProperty('rate', 160)
@@ -69,7 +59,7 @@ def ask_open_ai(prompt):
 def detect_wake_word(): 
     print("Waiting for wake word... ")
 
-    # Reinitialize the audio stream
+    # Initialize the audio stream
     pa = pyaudio.PyAudio()
     audio_stream = pa.open(
         rate = porcupine.sample_rate,
