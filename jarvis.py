@@ -1,12 +1,14 @@
 import openai
-import pyttsx3
 import speech_recognition as sr
 import pvporcupine
 import pyaudio
 import struct
 import time
-from dotenv import load_dotenv
 import os
+from typing import IO
+from dotenv import load_dotenv
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play, VoiceSettings
 
 load_dotenv()
 
@@ -15,15 +17,28 @@ porcupine = pvporcupine.create(
     access_key = os.getenv("ACCESS_KEY"),
     keyword_paths=['./hey_jarvis.ppn']
 )
-
-# Initialize text-to-speech engine
-engine = pyttsx3.init()
-engine.setProperty('rate', 160)
+client = ElevenLabs(
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+)
 
 # Function to convert text to speech and play it
-def speak(text):
-    engine.say(text)
-    engine.runAndWait()
+def speak(text: str) -> IO[bytes]:
+    try:
+        audio = client.text_to_speech.convert(
+            voice_id="1Tkze4MH2naaUrV7BJuv",
+            output_format="mp3_44100_128",
+            text=text,
+            model_id="eleven_multilingual_v2", 
+            voice_settings=VoiceSettings(
+                stability = 1.0,
+                similarity_boost = 1.0,
+                style = 0.2,
+                speed = 1
+            )
+        )
+        play(audio)
+    except Exception as e:
+        print(f"[ERROR] ElevenLabs TTS failed: {e}")
 
 # Function to capture speech and convert it to text
 def listen(): 
@@ -82,7 +97,7 @@ def detect_wake_word():
     finally:
         audio_stream.stop_stream()
         audio_stream.close()
-        pa.terminate
+        pa.terminate()
 
 # Main function for JARVIS
 def main():
