@@ -17,14 +17,14 @@ porcupine = pvporcupine.create(
 )
 
 # Start an audio stream for wake word detection
-pa = pyaudio.PyAudio()
-audio_stream = pa.open(
-    rate = porcupine.sample_rate,
-    channels = 1, 
-    format = pyaudio.paInt16,
-    input = True, 
-    frames_per_buffer = porcupine.frame_length
-)
+# pa = pyaudio.PyAudio()
+# audio_stream = pa.open(
+#     rate = porcupine.sample_rate,
+#     channels = 1, 
+#     format = pyaudio.paInt16,
+#     input = True, 
+#     frames_per_buffer = porcupine.frame_length
+# )
 
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
@@ -54,12 +54,12 @@ def listen():
             return None
         
 # Function to send text to OpenAI and return AI response
-# Need to add an exception if response content is null so program doesn't crash
 def ask_open_ai(prompt): 
     response = openai.chat.completions.create(
         model = 'gpt-4o-mini',
         messages = [
             {"role": "developer", "content": "You are to act like JARVIS, Tony Stark's AI assistant from Iron Man, who has now been assigned to serve me, Wesley Hewell."},
+            {"role": "developer", "content": "Please provide responses in a concise manner."},
             {"role": "user", "content": prompt}
         ]
     )
@@ -68,19 +68,35 @@ def ask_open_ai(prompt):
 # Wake word detection loop 
 def detect_wake_word(): 
     print("Waiting for wake word... ")
-    while True: 
-        pcm = audio_stream.read(porcupine.frame_length, exception_on_overflow = False)
-        pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
 
-        keyword_index = porcupine.process(pcm)
-        if keyword_index >= 0: 
-            print("Wake word detected.")
-            speak("Yes, sir.")
-            return
+    # Reinitialize the audio stream
+    pa = pyaudio.PyAudio()
+    audio_stream = pa.open(
+        rate = porcupine.sample_rate,
+        channels = 1, 
+        format = pyaudio.paInt16,
+        input = True, 
+        frames_per_buffer = porcupine.frame_length
+    )
+
+    try:
+        while True: 
+            pcm = audio_stream.read(porcupine.frame_length, exception_on_overflow = False)
+            pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
+
+            keyword_index = porcupine.process(pcm)
+            if keyword_index >= 0: 
+                print("Wake word detected.")
+                speak("Yes, sir.")
+                return
+    finally:
+        audio_stream.stop_stream()
+        audio_stream.close()
+        pa.terminate
 
 # Main function for JARVIS
 def main():
-    speak("Hello, I am JARVIS. How can I assist you?")
+    speak("Hello, I am JARVIS.")
 
     while True: 
         detect_wake_word()
